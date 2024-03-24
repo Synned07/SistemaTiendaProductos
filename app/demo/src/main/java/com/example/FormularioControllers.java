@@ -378,7 +378,7 @@ public class FormularioControllers implements Initializable
 
                     //tenemos que calcular nuestro costo para que se vaya actualizando constantemente.
                     this.CalcularCostoTotal(productoSeleccionado.getCantidad(), productoSeleccionado.getValorUnitario(), false);
-                    
+
                     //eliminar de mi tabla de producto...
                     if ( this.tabla.getItems().contains(productoSeleccionado) )
                     {
