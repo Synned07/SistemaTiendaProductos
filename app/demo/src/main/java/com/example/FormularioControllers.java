@@ -42,7 +42,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import okhttp3.MediaType;
@@ -51,7 +50,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class FormularioControllers extends Dialog<Void> implements Initializable
+public class FormularioControllers implements Initializable
 {
 
     private String direccion = Paths.get("").toAbsolutePath().toString();
@@ -454,12 +453,21 @@ public class FormularioControllers extends Dialog<Void> implements Initializable
 
             if ( productoSeleccionado.size() > 0 && productoSeleccionado.size() == 1)
             {
-                titulo.setFont(Font.font("Verdana", 20));
-                titulo.setTextFill(Color.rgb(28, 146, 163));
+                Dialog<Void> dialog = new Dialog<>();
+
+                DialogPane panelDialogo = new DialogPane();
+                panelDialogo.setPrefWidth(450.0d);
+                dialog.setDialogPane(panelDialogo);
+
+                //damos un texto a nuestro tituloo del Dialogo Panel
+                titulo.getStyleClass().add("titulo-editar");
+                //titulo para la ventana Dialog
+                dialog.setTitle("Editar Producto");
 
                 HBox hbox = new HBox(titulo);
+                hbox.getStyleClass().add("hbox-titulo");
+                hbox.setPrefWidth(panelDialogo.getPrefWidth());
                 hbox.setAlignment(Pos.CENTER);
-                hbox.setSpacing(5.0d);
 
                 FieldCodigo.setPadding(new Insets(8.0d, 8.0d, 8.0d, 8.0d));
                 FieldCodigo.setText(productoSeleccionado.get(0).getCodigo());
@@ -483,32 +491,34 @@ public class FormularioControllers extends Dialog<Void> implements Initializable
                 LabelValorUnitario.setPadding(new Insets(10.0d, 0.0d, 5.0d, 0.0d) );
                 LabelValorUnitario.setFont(Font.font("Verdana", 14));
 
-                Button btnEditar = new Button("Editar");
-                btnEditar.getStyleClass().add("boton-editar");
+                Button btnGuardar = new Button("Guardar");
+                btnGuardar.getStyleClass().add("boton-guardar");
 
-                Button btnEliminar = new Button("Eliminar");
+                Button btnCancelar = new Button("Cancelar");
+                btnCancelar.getStyleClass().add("boton-cancelar");
+                btnCancelar.setOnAction(evento -> {
+                    dialog.close();
+                });
 
                 HBox hbox2 = new HBox(
-                        btnEditar,
-                        btnEliminar
+                        btnGuardar,
+                        btnCancelar
                 );
+                hbox2.setPadding(new Insets(10.0d, 0.0d, 0.0d, 0.0d));
+                hbox2.getStyleClass().add("hbox-botones");
 
-                VBox vbox = new VBox(
+                // configuraciones adicionales para nuestro panel de dialogo.
+                panelDialogo.getStylesheets().add(getClass().getResource("css/style.css").toExternalForm());
+                panelDialogo.setContent(new VBox(
                         hbox,
                         LabelCodigo, FieldCodigo,
                         LabelProducto, FieldProducto,
                         LabelCantidad, FieldCantidad,
                         LabelValorUnitario, FieldValorUnitario,
                         hbox2
-                );
-
-                // vamos a crear un dialog panel ...
-                DialogPane panelDialogo = getDialogPane();
-                panelDialogo.setPrefWidth(450.0d);
-                panelDialogo.setContent(vbox);
-
-                setTitle("Editar Producto");
-                showAndWait();
+                ));
+                
+                dialog.showAndWait();
             }
             else
             {

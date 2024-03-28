@@ -1,8 +1,42 @@
-.boton-editar {
-    -fx-background-color: #54CD59 !important;
+.hbox-titulo {
+    -fx-background-color: #1c92a3;
+    -fx-border-radius: 5px;
+}
+
+.titulo-editar {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: rgb(255, 255, 255);
+    -fx-padding: 5px 10px 5px 10px;
+}
+
+.hbox-botones {
+    -fx-spacing: 10px;
+}
+
+.boton-guardar {
+    -fx-background-color: #54CD59;
     -fx-text-fill: rgb(255, 255, 255);
     -fx-font-weight: bold;
+    -fx-start-margin: 2px;
+    -fx-padding: 5px;
+    -fx-pref-width: 80px;
 }
 
 
+.boton-cancelar {
+    -fx-background-color: rgb(255, 0, 0);
+    -fx-text-fill: rgb(255, 255, 255);
+    -fx-font-weight: bold;
+    -fx-start-margin: 2px;
+    -fx-padding: 5px;
+    -fx-pref-width: 80px;
+}
 
+.boton-guardar:hover {
+    -fx-background-color: #64d768;    
+}
+
+.boton-cancelar:hover {
+    -fx-background-color: rgb(234, 93, 93);    
+}

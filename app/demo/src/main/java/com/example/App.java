@@ -20,10 +20,7 @@ public class App extends Application {
         //realizaremos un agrupamiento
         Parent root = FXMLLoader.load(getClass().getResource("interfaz.fxml"));
         Scene scene = new Scene(root);
-        scene.getStylesheets().add(getClass().getResource("css/style.css").toExternalForm());
-
-        System.out.println(getClass().getResource("css/style.css").toExternalForm());
-
+        
         stage.setResizable(false);
         Image imagen = new Image( getClass().getResource("store.png").toString() );
         stage.getIcons().add(imagen);
