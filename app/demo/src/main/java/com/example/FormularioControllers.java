@@ -2,22 +2,24 @@ package com.example;
 
 import java.math.BigDecimal;
 import java.net.URL;
-import java.util.*;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
+import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import com.example.models.Producto;
-import com.example.repository.ClienteRepository;
-import com.fasterxml.jackson.core.io.BigDecimalParser;
-import javafx.scene.control.*;
-import javafx.scene.text.Text;
 import org.apache.commons.lang.math.NumberUtils;
 import org.joda.time.DateTime;
 import org.json.JSONArray;
-import org.json.JSONObject;
 
 import com.example.models.Cliente;
+import com.example.models.Producto;
 import com.example.models.Tabla;
+import com.example.repository.ClienteRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 
@@ -25,15 +27,34 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.DialogPane;
+import javafx.scene.control.Label;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class FormularioControllers implements Initializable
+public class FormularioControllers extends Dialog<Void> implements Initializable
 {
+
+    private String direccion = Paths.get("").toAbsolutePath().toString();
 
     private Cliente cliente;
     private List<Producto> productos;
@@ -72,7 +93,8 @@ public class FormularioControllers implements Initializable
     private Button botonEliminar;
     @FXML
     private Button botonRegistrar;
-
+    @FXML
+    private Button botonEditar;
     /* Los campos se pondran para calcular de manera automatica a los productos */
     @FXML
     private ChoiceBox campoProducto;
@@ -100,6 +122,22 @@ public class FormularioControllers implements Initializable
 
     @FXML
     private Text campoCostoTotal;
+
+
+    /*
+    * Los campos de texto a continuacion pertenecen para editar el producto seleccionado de la tabla
+    *  */
+    TextField FieldCodigo = new TextField();
+    TextField FieldProducto = new TextField();
+    TextField FieldCantidad = new TextField();
+    TextField FieldValorUnitario = new TextField();
+
+    //el texto para los campos de arriba
+    Label titulo = new Label("EDITAR PRODUCTO");
+    Label LabelCodigo = new Label("Código: ");
+    Label LabelProducto = new Label("Producto: ");
+    Label LabelCantidad = new Label("Cantidad: ");
+    Label LabelValorUnitario = new Label("Valor Unitario: ");
 
     @Override
     public void initialize(URL arg0, ResourceBundle arg1) 
@@ -348,11 +386,13 @@ public class FormularioControllers implements Initializable
     {
         try
         {
-            List<Tabla> registrosSeleccionados = this.tabla.getSelectionModel().getSelectedItems();
+            //crearemos una copia modificable de los valores de la tabla... (pero solamente de los que fueron seleccionados)
+            List<Tabla> registrosSeleccionados = new ArrayList<>(List.copyOf( this.tabla.getSelectionModel().getSelectedItems() ));
 
             if(registrosSeleccionados.size() > 0)
             {
                 registrosSeleccionados.forEach(productoSeleccionado -> {
+
                     int indice = this.productos.indexOf(new Producto(
                             productoSeleccionado.getId(),
                             productoSeleccionado.getProducto(),
@@ -383,7 +423,6 @@ public class FormularioControllers implements Initializable
                     if ( this.tabla.getItems().contains(productoSeleccionado) )
                     {
                         this.tabla.getItems().remove(productoSeleccionado);
-                        this.tabla.refresh();
                     }
 
                     //eliminarlo de registros...
@@ -392,11 +431,89 @@ public class FormularioControllers implements Initializable
 
                 //mostramos dentro de la parte de la interfaz el costo total...
                 this.campoCostoTotal.setText( String.format("%.2f", this.costoTotal[0] ) );
+                this.tabla.refresh();
 
                 return;
             }
 
             mensaje(true, "ELIMINACION DE PRODUCTO", "ERROR", "Escoge un producto a eliminar");
+        }
+        catch (Exception e)
+        {
+            mensaje(true, "PROBLEMA DE CONEXION", "ERROR", "Vuelve a intentarlo mas tarde");
+        }
+    }
+
+
+    @FXML
+    public void EventoBotonActualizarProducto()
+    {
+        try
+        {
+            List<Tabla> productoSeleccionado = this.tabla.getSelectionModel().getSelectedItems();
+
+            if ( productoSeleccionado.size() > 0 && productoSeleccionado.size() == 1)
+            {
+                titulo.setFont(Font.font("Verdana", 20));
+                titulo.setTextFill(Color.rgb(28, 146, 163));
+
+                HBox hbox = new HBox(titulo);
+                hbox.setAlignment(Pos.CENTER);
+                hbox.setSpacing(5.0d);
+
+                FieldCodigo.setPadding(new Insets(8.0d, 8.0d, 8.0d, 8.0d));
+                FieldCodigo.setText(productoSeleccionado.get(0).getCodigo());
+                FieldCodigo.setDisable(true);
+                LabelCodigo.setPadding(new Insets(10.0d, 0.0d, 5.0d, 0.0d) );
+                LabelCodigo.setFont(Font.font("Verdana", 14));
+
+                FieldProducto.setPadding(new Insets(8.0d, 8.0d, 8.0d, 8.0d));
+                FieldProducto.setText(productoSeleccionado.get(0).getProducto());
+                FieldProducto.setDisable(true);
+                LabelProducto.setPadding(new Insets(10.0d, 0.0d, 5.0d, 0.0d) );
+                LabelProducto.setFont(Font.font("Verdana", 14));
+
+                FieldCantidad.setPadding(new Insets(8.0d, 8.0d, 8.0d, 8.0d));
+                FieldCantidad.setText( Integer.toString( productoSeleccionado.get(0).getCantidad() ) );
+                LabelCantidad.setPadding(new Insets(10.0d, 0.0d, 5.0d, 0.0d) );
+                LabelCantidad.setFont(Font.font("Verdana", 14));
+
+                FieldValorUnitario.setPadding(new Insets(8.0d, 8.0d, 8.0d, 8.0d));
+                FieldValorUnitario.setText( Double.toString( productoSeleccionado.get(0).getValorUnitario() ) );
+                LabelValorUnitario.setPadding(new Insets(10.0d, 0.0d, 5.0d, 0.0d) );
+                LabelValorUnitario.setFont(Font.font("Verdana", 14));
+
+                Button btnEditar = new Button("Editar");
+                btnEditar.getStyleClass().add("boton-editar");
+
+                Button btnEliminar = new Button("Eliminar");
+
+                HBox hbox2 = new HBox(
+                        btnEditar,
+                        btnEliminar
+                );
+
+                VBox vbox = new VBox(
+                        hbox,
+                        LabelCodigo, FieldCodigo,
+                        LabelProducto, FieldProducto,
+                        LabelCantidad, FieldCantidad,
+                        LabelValorUnitario, FieldValorUnitario,
+                        hbox2
+                );
+
+                // vamos a crear un dialog panel ...
+                DialogPane panelDialogo = getDialogPane();
+                panelDialogo.setPrefWidth(450.0d);
+                panelDialogo.setContent(vbox);
+
+                setTitle("Editar Producto");
+                showAndWait();
+            }
+            else
+            {
+                mensaje(true, "ACTUALIZACION DE PRODUCTO", "ERROR", "Escoge solo un producto para actualizar");
+            }
         }
         catch (Exception e)
         {
@@ -602,6 +719,7 @@ public class FormularioControllers implements Initializable
         {
             mensaje = new Alert(Alert.AlertType.ERROR);
         }
+
 
         mensaje.setHeaderText(cabecera);
         mensaje.setTitle(titulo);
