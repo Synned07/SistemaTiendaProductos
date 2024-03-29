@@ -1,6 +1,17 @@
+/* estilos para nuestro formulario de edicion de producto */
+.field-estilo {
+    -fx-padding: 8px;
+}
+
+.label-estilo {
+    -fx-font-family: "Verdana";
+    -fx-font-size: 14px;
+    -fx-padding: 15px 0px 5px 0px;
+}
+
 .hbox-titulo {
     -fx-background-color: #1c92a3;
-    -fx-border-radius: 5px;
+    -fx-border-radius: 10px;
 }
 
 .titulo-editar {

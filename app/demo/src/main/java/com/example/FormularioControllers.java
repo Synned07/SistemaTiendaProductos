@@ -31,6 +31,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
@@ -42,7 +43,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -52,7 +52,6 @@ import okhttp3.Response;
 
 public class FormularioControllers implements Initializable
 {
-
     private String direccion = Paths.get("").toAbsolutePath().toString();
 
     private Cliente cliente;
@@ -233,6 +232,7 @@ public class FormularioControllers implements Initializable
             this.botonEliminar.setDisable(acceso);
             this.botonInsertar.setDisable(acceso);
             this.botonRegistrar.setDisable(acceso);
+            this.botonEditar.setDisable(acceso);
         }
 
     }
@@ -302,7 +302,6 @@ public class FormularioControllers implements Initializable
                 .collect(Collectors.toList());
     }
 
-
     /*
      * Dentro de esta funcion, esta nos permitira introducirlo dentro de 
      * nuestra tabla. 
@@ -363,10 +362,7 @@ public class FormularioControllers implements Initializable
                 this.insertarOAgregarCantidadProducto(registroProducto.getProductoId(), cantidad, true);
 
                 //tenemos que calcular nuestro costo para que se vaya actualizando constantemente.
-                this.CalcularCostoTotal(cantidad, registroProducto.getProductoValorUnitario(), true);
-
-                //mostramos dentro de la parte de la interfaz el costo total...
-                this.campoCostoTotal.setText( String.format("%.2f", this.costoTotal[0] ) );
+                this.CalcularCostoTotal();
             }
             else
             {
@@ -415,9 +411,7 @@ public class FormularioControllers implements Initializable
                     if(indice != -1)
                         this.productos_escogidos.remove(this.productos_escogidos.get(indice));
 
-                    //tenemos que calcular nuestro costo para que se vaya actualizando constantemente.
-                    this.CalcularCostoTotal(productoSeleccionado.getCantidad(), productoSeleccionado.getValorUnitario(), false);
-
+                    
                     //eliminar de mi tabla de producto...
                     if ( this.tabla.getItems().contains(productoSeleccionado) )
                     {
@@ -428,8 +422,10 @@ public class FormularioControllers implements Initializable
                     this.registros.remove(productoSeleccionado);
                 });
 
-                //mostramos dentro de la parte de la interfaz el costo total...
-                this.campoCostoTotal.setText( String.format("%.2f", this.costoTotal[0] ) );
+
+                //tenemos que calcular nuestro costo para que se vaya actualizando constantemente.
+                this.CalcularCostoTotal();
+          
                 this.tabla.refresh();
 
                 return;
@@ -453,7 +449,8 @@ public class FormularioControllers implements Initializable
 
             if ( productoSeleccionado.size() > 0 && productoSeleccionado.size() == 1)
             {
-                Dialog<Void> dialog = new Dialog<>();
+                Dialog<ButtonType> dialog = new Dialog<>();
+                dialog.setResult(ButtonType.CLOSE);
 
                 DialogPane panelDialogo = new DialogPane();
                 panelDialogo.setPrefWidth(450.0d);
@@ -469,34 +466,44 @@ public class FormularioControllers implements Initializable
                 hbox.setPrefWidth(panelDialogo.getPrefWidth());
                 hbox.setAlignment(Pos.CENTER);
 
-                FieldCodigo.setPadding(new Insets(8.0d, 8.0d, 8.0d, 8.0d));
+                FieldCodigo.getStyleClass().add("field-estilo");
                 FieldCodigo.setText(productoSeleccionado.get(0).getCodigo());
                 FieldCodigo.setDisable(true);
-                LabelCodigo.setPadding(new Insets(10.0d, 0.0d, 5.0d, 0.0d) );
-                LabelCodigo.setFont(Font.font("Verdana", 14));
+                LabelCodigo.getStyleClass().add("label-estilo");
 
-                FieldProducto.setPadding(new Insets(8.0d, 8.0d, 8.0d, 8.0d));
+                FieldProducto.getStyleClass().add("field-estilo");
                 FieldProducto.setText(productoSeleccionado.get(0).getProducto());
                 FieldProducto.setDisable(true);
-                LabelProducto.setPadding(new Insets(10.0d, 0.0d, 5.0d, 0.0d) );
-                LabelProducto.setFont(Font.font("Verdana", 14));
+                LabelProducto.getStyleClass().add("label-estilo");
 
-                FieldCantidad.setPadding(new Insets(8.0d, 8.0d, 8.0d, 8.0d));
+                FieldCantidad.getStyleClass().add("field-estilo");
                 FieldCantidad.setText( Integer.toString( productoSeleccionado.get(0).getCantidad() ) );
-                LabelCantidad.setPadding(new Insets(10.0d, 0.0d, 5.0d, 0.0d) );
-                LabelCantidad.setFont(Font.font("Verdana", 14));
+                LabelCantidad.getStyleClass().add("label-estilo");
 
-                FieldValorUnitario.setPadding(new Insets(8.0d, 8.0d, 8.0d, 8.0d));
+                FieldValorUnitario.getStyleClass().add("field-estilo");
                 FieldValorUnitario.setText( Double.toString( productoSeleccionado.get(0).getValorUnitario() ) );
-                LabelValorUnitario.setPadding(new Insets(10.0d, 0.0d, 5.0d, 0.0d) );
-                LabelValorUnitario.setFont(Font.font("Verdana", 14));
+                LabelValorUnitario.getStyleClass().add("label-estilo");
 
                 Button btnGuardar = new Button("Guardar");
                 btnGuardar.getStyleClass().add("boton-guardar");
+                btnGuardar.setOnAction(e -> {
+                    Tabla productoEditar = new Tabla(
+                        FieldCodigo.getText(),
+                        FieldProducto.getText(),
+                        Integer.parseInt( FieldCantidad.getText() ),
+                        Double.parseDouble( FieldValorUnitario.getText() )
+                    );
+                    
+                    //esta funcion ira a la tabla y actualizar el producto con el codigo asignado.
+                    if( ActualizarRegistroProductoEnTabla(productoEditar, productoSeleccionado.get(0).getCantidad()) )
+                        dialog.close();
+                      
+                });
 
                 Button btnCancelar = new Button("Cancelar");
                 btnCancelar.getStyleClass().add("boton-cancelar");
-                btnCancelar.setOnAction(evento -> {
+                btnCancelar.setOnAction(e -> {
+
                     dialog.close();
                 });
 
@@ -517,7 +524,7 @@ public class FormularioControllers implements Initializable
                         LabelValorUnitario, FieldValorUnitario,
                         hbox2
                 ));
-                
+
                 dialog.showAndWait();
             }
             else
@@ -529,6 +536,74 @@ public class FormularioControllers implements Initializable
         {
             mensaje(true, "PROBLEMA DE CONEXION", "ERROR", "Vuelve a intentarlo mas tarde");
         }
+    }
+
+    public boolean ActualizarRegistroProductoEnTabla(Tabla productoEditar, int cantidadAntigua)
+    {
+        //actualizamos nuestra lista de productos de la base de datos.
+        int indice = this.productos.indexOf(new Producto(0, productoEditar.getProducto(), 0, 0.0));
+
+        if( productoEditar.getCantidad() > (cantidadAntigua + this.productos.get(indice).getProductoCantidad() ) )
+        {
+            mensaje(true, "ACTUALIZACION DE PRODUCTO", "ERROR", "No existe dicha cantidad en bodega");
+        }
+        else if ( productoEditar.getCantidad() <= (cantidadAntigua + this.productos.get(indice).getProductoCantidad() ) )
+        {
+            indice = this.tabla.getItems().indexOf(productoEditar);
+        
+            if(indice != -1)
+            {
+                //actualizamos el registro de nuestra tabla
+                ( (Tabla) this.tabla.getItems().get(indice) ).setCantidad(productoEditar.getCantidad());
+                ( (Tabla) this.tabla.getItems().get(indice) ).setValorUnitario(productoEditar.getValorUnitario());
+                
+                //actualizamos nuestros productos escogidos.
+                indice = this.productos_escogidos.indexOf(new Tabla(
+                    productoEditar.getCodigo(),
+                    productoEditar.getProducto(),
+                    productoEditar.getCantidad(),
+                    productoEditar.getValorUnitario()
+                ));
+
+                if( indice != -1 )
+                {
+                   ( (Tabla) this.productos_escogidos.get(indice) ).setCantidad( productoEditar.getCantidad() );
+                   ( (Tabla) this.productos_escogidos.get(indice) ).setValorUnitario( productoEditar.getValorUnitario() );
+                }
+
+                //actualizamos la cantidad del producto que es de la base de datos.
+                indice = this.productos.indexOf(new Producto(0, productoEditar.getProducto(), 0, 0.0));
+
+                if(indice != -1)
+                {
+                    if( productoEditar.getCantidad() < cantidadAntigua )
+                    {
+                        cantidadAntigua -= productoEditar.getCantidad();
+                        insertarOAgregarCantidadProducto(
+                            this.productos.get(indice).getProductoId(), 
+                            cantidadAntigua, 
+                            false); //poner
+                    }
+                    else if( productoEditar.getCantidad() > cantidadAntigua )
+                    {
+                        productoEditar.setCantidad(productoEditar.getCantidad() - cantidadAntigua);
+                        insertarOAgregarCantidadProducto(
+                            this.productos.get(indice).getProductoId(), 
+                            productoEditar.getCantidad(), 
+                            true); //quitar
+                    }
+                }
+
+                //actualizamos el costo total...
+                CalcularCostoTotal();
+                this.tabla.refresh();
+
+                return true;
+            }
+            
+        }
+
+        return false;
     }
 
     public String EnviarFacturaFinalGuardar(int idCliente)
@@ -688,17 +763,21 @@ public class FormularioControllers implements Initializable
 
     }
 
-
+    
     /*
     * Este es para que se muestre en la interfaz, el calculo
     * */
-    public void CalcularCostoTotal(int cantidad, double valorUnitario, boolean tipo)
+    public void CalcularCostoTotal()
     {
-        if( tipo )
-            this.costoTotal[0] += (cantidad * valorUnitario);
-        else
-            this.costoTotal[0] -= (cantidad * valorUnitario);
+        this.costoTotal[0] = 0;
+        this.tabla.getItems().stream()
+            .forEach(e ->  this.costoTotal[0] +=  ( (Tabla) e ).getCantidad() * ( (Tabla) e ).getValorUnitario()   );  
+            
+        
+        //mostramos dentro de la parte de la interfaz el costo total...
+        this.campoCostoTotal.setText( String.format("%.2f", this.costoTotal[0] ) );
     }
+
 
     public String codigoAleatorio()
     {
