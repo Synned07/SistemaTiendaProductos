@@ -623,24 +623,24 @@ public class FormularioControllers implements Initializable
             json_registro.put("facturaCodigo", codigoAleatorio);
             json_registro.put("facturaFecha", fechaActual.toString());
             json_registro.put("facturaIdCliente", Integer.toString(idCliente));
-            json_registro.put("facturaTotal", "0"); //dentro de este campo ya se calcula solo.
+            json_registro.put("facturaTotal", "0"); //en la base de datos este campo se calcula solo...
 
-            List<HashMap<String, Object>> listado_registros = new ArrayList<>();
+            List<HashMap<String, String>> listado_registros = new ArrayList<>();
 
-            for(var registro : this.productos_escogidos)
-            {
-                HashMap<String, String> obj = (HashMap) registro;
-
-                HashMap<String, Object> json_registro2 = new HashMap<>();
+            ( (List<Object>) this.productos_escogidos).stream().forEach( e -> {
+                Tabla t = (Tabla) e;
+                HashMap<String, String> json_registro2 = new HashMap<>();
+                double total = ( t.getCantidad() * t.getValorUnitario());
                 json_registro2.put("detalleFacturaId", "0");
                 json_registro2.put("detalleFacturaCodigoFactura", codigoAleatorio);
-                json_registro2.put("detalleFacturaProductoId", obj.get("productoId"));
-                json_registro2.put("detalleFacturaCantidad", obj.get("productoCantidad"));
-                json_registro2.put("detalleFacturaValorUnitario", obj.get("productoValorUnitario"));
-                json_registro2.put("detalleFacturaValorTotal", "5");
+                json_registro2.put("detalleFacturaProductoId", Integer.toString( t.getId() ) );
+                json_registro2.put("detalleFacturaCantidad", Integer.toString( t.getCantidad() ) );
+                json_registro2.put("detalleFacturaValorUnitario", Double.toString( t.getValorUnitario() ));
+                json_registro2.put("detalleFacturaValorTotal", Double.toString( total ));
 
                 listado_registros.add(json_registro2);
-            }
+            });
+
             json_registro.put("detalleFacturas", listado_registros);
 
             ObjectMapper objMapper = new ObjectMapper();
@@ -655,10 +655,6 @@ public class FormularioControllers implements Initializable
             .build();
 
             Response response = c.newCall(request).execute();
-
-            System.out.println("procesado correctamente....");
-            System.out.println(response);
-            System.out.println(response.body().string());
 
             return "ok";
         } 
@@ -689,7 +685,6 @@ public class FormularioControllers implements Initializable
             .build();
 
             Response response = c.newCall(request).execute();
-
 
             return response.body().string();
         } catch (Exception e) {
